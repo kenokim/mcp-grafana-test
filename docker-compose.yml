@@ -38,6 +38,10 @@ services:
       - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=5s
       # 그라파나 대시보드 ID 19004 자동 임포트
       - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/json/spring-boot-dashboard-19004.json
+      # 렌더러 설정 추가
+      - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
+      - GF_LOG_FILTERS=rendering:debug
     volumes:
       - grafana-storage:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
@@ -45,6 +49,18 @@ services:
       - monitoring-network
     depends_on:
       - prometheus
+      - renderer
+
+  # 이미지 렌더러 서비스 추가
+  renderer:
+    image: grafana/grafana-image-renderer:latest
+    container_name: grafana-renderer
+    ports:
+      - "8081:8081"
+    environment:
+      - ENABLE_METRICS=true
+    networks:
+      - monitoring-network
 
 networks:
   monitoring-network:
